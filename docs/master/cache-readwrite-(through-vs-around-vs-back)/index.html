@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cache Read/Write (Through vs Around vs Back) | Common Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" rel="stylesheet">
+    <link href="../../style.css" rel="stylesheet">
+    <link href="./../style-branding.css" rel="stylesheet">
+    <script type="text/javascript" src="../../modal.js"></script>
+    <script type="text/javascript" src="../../svg-modal.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript" src="../../header.js"></script>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand has-site-branding"><a href="../" class="navbar-item"><span class="has-text-weight-semibold has-site-branding">Common Patterns</span></a></div>
+      <div class="navbar-menu has-site-branding">
+        <div class="navbar-end">
+          <div class="navbar-item"><input class="input is-small is-rounded" id="search" type="search" size="30" maxlength="50" placeholder="Search..." onkeyup="redirect(event, value, '../search/')"></div>
+          <div class="navbar-item has-dropdown is-hoverable"><a class="navbar-link has-site-branding">master</a>
+            <div class="navbar-dropdown is-right"><a href="../../master/" class="navbar-item">master</a>
+              <hr class="navbar-divider">
+              <div class="navbar-item has-text-grey-light"><span>v</span><span>0.0.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="site-layout" id="site">
+      <aside class="menu p-3">
+        <p class="menu-label">General</p>
+        <ul class="menu-list has-site-branding">
+          <li><a href="../" class="">Home</a><a href="./" class="is-active">Cache Read/Write (Through vs Around vs Back)</a></li>
+        </ul>
+        <p class="menu-label">Software systems</p>
+        <ul class="menu-list has-site-branding">
+          <li></li>
+        </ul>
+      </aside>
+      <div class="container is-fluid">
+        <div class="content p-3">
+          <div><h1>Cache Read/Write (Through vs Around vs Back)</h1>
+<h2>Read Through</h2>
+<p>Data is read from the cache if it exists, otherwise it is read from the backing store and written to the cache.</p>
+<h3>Pros</h3>
+<ul>
+ <li>Ensures fast retrieval of frequently accessed data</li>
+</ul>
+<h3>Cons</h3>
+<ul>
+ <li>Read latency is high on cache misses as it waits for the backing store to respond</li>
+</ul>
+<h3>Good for</h3>
+<ul>
+ <li>Applications that read frequently and can tolerate higher latency on cache misses</li>
+ <li>Higher read performance &lt; lower write performance</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Cache
+    participant Database
+    
+    Client-&gt;&gt;Server: GET /data
+    alt Cache Hit
+        Server-&gt;&gt;Cache: Read data
+        Cache-&gt;&gt;Server: Return data
+    else Cache Miss
+        Server-&gt;&gt;Database: Read data
+        Database-&gt;&gt;Server: Return data
+        Server-&gt;&gt;Cache: Write data
+        Cache-&gt;&gt;Server: Ack
+    end
+    Server-&gt;&gt;Client: Return data
+</code></pre>
+<h2>Write Through</h2>
+<p>Data is written to the cache and backing store at the same time. I/O completion is only confirmed once data has been written to both places.</p>
+<h3>Pros</h3>
+<ul>
+ <li>Ensures fast retrieval</li>
+ <li>Ensure data in the backing store if the cache is corrupted</li>
+</ul>
+<h3>Cons</h3>
+<ul>
+ <li>Write latency is high as it waits for both cache and backing store to confirm writes</li>
+</ul>
+<h3>Good for</h3>
+<ul>
+ <li>Applications that write then re-read frequently</li>
+ <li>Higher write latency &lt; lower read latency</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Cache
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    par Cache
+        Server-&gt;&gt;Cache: Write data
+        Cache-&gt;&gt;Server: Ack
+    and Database
+        Server-&gt;&gt;Database: Write data
+        Database-&gt;&gt;Server: Ack
+    end
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h2>Write Around</h2>
+<p>Data is written directly to the backing store, bypassing the cache. The cache is only updated when data is read.</p>
+<h3>Pros</h3>
+<ul>
+ <li>Reduces write latency as it only waits for the backing store to confirm writes</li>
+ <li>Reduces cache pollution from infrequently written data</li>
+</ul>
+<h3>Cons</h3>
+<ul>
+ <li>Slower read performance for data that is written and then read soon after</li>
+</ul>
+<h3>Good for</h3>
+<ul>
+ <li>Applications that do not re-read data soon after writing</li>
+ <li>Higher read latency &lt; lower write latency</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    Server-&gt;&gt;Database: Write data
+    Database-&gt;&gt;Server: Ack
+    Server-&gt;&gt;Client: 200 OK    
+</code></pre>
+<h2>Write Back</h2>
+<p>Data is written to the cache only. The cache asynchronously writes data to the backing store at a later time.</p>
+<h3>Pros</h3>
+<ul>
+ <li>Low write latency as it only waits for the cache to confirm writes</li>
+ <li>Reduces write load on the backing store</li>
+</ul>
+<h3>Cons</h3>
+<ul>
+ <li>Risk of data loss if the cache is corrupted before data is written to the backing store</li>
+</ul>
+<h3>Good for</h3>
+<ul>
+ <li>Applications that write frequently and can tolerate some data loss</li>
+ <li>Higher write performance &lt; data durability</li>
+</ul>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Cache
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    Server-&gt;&gt;Cache: Write data
+    Cache-&gt;&gt;Server: Ack
+    Server-&gt;&gt;Client: 200 OK
+    Note over Cache, Database: Asynchronous write to Database
+    Cache-&gt;&gt;Database: Write data
+    Database-&gt;&gt;Cache: Ack
+</code></pre></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="../../reformat-mermaid.js"></script>
+    <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.9.0/dist/mermaid.esm.min.mjs';</script>
+  </body>
+</html>

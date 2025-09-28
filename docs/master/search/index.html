@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search results | Common Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" rel="stylesheet">
+    <link href="../../style.css" rel="stylesheet">
+    <link href="./../style-branding.css" rel="stylesheet">
+    <script type="text/javascript" src="../../modal.js"></script>
+    <script type="text/javascript" src="../../svg-modal.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
+    <script type="text/javascript" src="../../toggle-theme.js"></script>
+    <link href="../../admonition.css" rel="stylesheet">
+
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" crossorigin="anonymous">
+        
+            <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" crossorigin="anonymous"></script>
+        
+            <script>
+            window.WebFontConfig = {
+                custom: {
+                families: ['KaTeX_AMS', 'KaTeX_Caligraphic:n4,n7', 'KaTeX_Fraktur:n4,n7',
+                    'KaTeX_Main:n4,n7,i4,i7', 'KaTeX_Math:i4,i7', 'KaTeX_Script',
+                    'KaTeX_SansSerif:n4,n7,i4', 'KaTeX_Size1', 'KaTeX_Size2', 'KaTeX_Size3',
+                    'KaTeX_Size4', 'KaTeX_Typewriter'],
+                },
+            };
+            </script>
+            <script defer src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" crossorigin="anonymous"></script>
+            <link href="../site/custom.css" rel="stylesheet">
+  </head>
+  <body>
+    <script type="text/javascript" src="../../header.js"></script>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand has-site-branding"><a href="../" class="navbar-item"><span class="has-text-weight-semibold has-site-branding">Common Patterns</span></a></div>
+      <div class="navbar-menu has-site-branding">
+        <div class="navbar-end">
+          <div class="navbar-item"><input class="input is-small is-rounded" id="search" type="search" size="30" maxlength="50" placeholder="Search..." onkeyup="redirect(event, value, './')"></div>
+          <div class="navbar-item has-dropdown is-hoverable"><a class="navbar-link has-site-branding">master</a>
+            <div class="navbar-dropdown is-right"><a href="../../master/" class="navbar-item">master</a>
+              <hr class="navbar-divider">
+<a class="navbar-item" onclick="toggleTheme()">Toggle theme</a>
+              <hr class="navbar-divider">
+              <div class="navbar-item has-text-grey-light"><span>v</span><span>0.0.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="site-layout" id="site">
+      <aside class="menu p-3">
+        <p class="menu-label">General</p>
+        <ul class="menu-list has-site-branding">
+          <li><a href="../" class="">Home</a><a href="../database/" class="">Database</a><a href="../cache/" class="">Cache</a></li>
+        </ul>
+        <p class="menu-label">Software systems</p>
+        <ul class="menu-list has-site-branding">
+          <li></li>
+        </ul>
+      </aside>
+      <div class="container is-fluid">
+        <div class="content p-3">
+          <h2>Search results</h2>
+          <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script>
+          <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr-languages@1.14.0/min/lunr.stemmer.support.min.js"></script>
+          <script type="text/javascript">const documents = [{"href":"../","type":"Home","title":"Common Patterns","text":"Common Patterns Github repo: [github.com/GeoffMall/common-patterns](https://github.com/GeoffMall/common-patterns)"},{"href":"../database/","type":"Workspace Documentation","title":"Database","text":"Database Database Types Overview"},{"href":"../cache/","type":"Workspace Documentation","title":"Cache","text":"Cache Cache-Aside Cache Hit Cache Miss Write Cache-Through (Read/Write-Through) Cache Hit Cache Miss Write Write-Around Write-Behind Eviction Examples Redis (In-Memory Data Store) Sources [TOC] [Caches](https://en.wikipedia.org/wiki/Cache_(computing)) store data so that future requests for that data can be served faster.\nIt is typically a smaller, faster storage layer that sits between the application and a larger, slower backing store (e.g., a database or file system). The application is responsible for reading and writing data to the cache as needed. \nWhen data is requested, the application first checks the cache. If the data is found (a cache hit), it is returned to the client. When the data is found in the cache, it is returned directly to the client. When the data is not found in the cache, it is fetched from the backing store, written to the cache, and then returned to the client. When data is written, it is written to both the cache and the backing store. Instead of the application managing the cache, a caching layer (e.g., Redis, Memcached) is used to automatically handle reading and writing data to the cache as needed. When the data is found in the cache, it is returned directly to the client. When the data is not found in the cache, it is fetched from the backing store, written to the cache, and then returned to the client. Data is written to the cache and backing store at the same time. I/O completion is only confirmed once data has been written to both places. Data is written directly to the backing store, bypassing the cache. The cache is only updated when data is read. Data is written to the cache only. The cache asynchronously writes data to the backing store at a later time. TTL (Time-To-Live) is a common eviction policy where cached data is automatically removed after a certain period of time.\nOther eviction policies include LRU (Least Recently Used), LFU (Least Frequently Used), and FIFO (First In, First Out). [Redis](https://redis.io/) is a versatile in-memory data store that serves as both a cache and a database. \nIt supports complex data structures and provides features like data expiration, which makes it a powerful choice for caching. Redis is often used to cache frequently accessed data, such as user sessions, leaderboard rankings, and real-time analytics. [Memcached](https://memcached.org/) is an in-memory key-value store designed for high-performance caching. It is known for its simplicity and efficiency in storing and retrieving data.\nDevelopers often use Memcached to cache database query results, API responses, and frequently accessed data in web applications."}];const idx = lunr(function () {
+                        this.ref('href')
+                        this.field('text')
+
+                        documents.forEach(function (doc) {
+                          this.add(doc)
+                        }, this)
+                      });
+                    </script>
+          <script type="text/javascript" src="../../search.js"></script>
+          <div id="search-results"></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="../../admonition.js"></script>
+    <script type="text/javascript" src="../../reformat-mermaid.js"></script>
+    <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.9.0/dist/mermaid.esm.min.mjs';</script>
+    <script type="text/javascript" src="../../katex-render.js"></script>
+  </body>
+</html>

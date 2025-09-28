@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cache | Common Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" rel="stylesheet">
+    <link href="../../style.css" rel="stylesheet">
+    <link href="./../style-branding.css" rel="stylesheet">
+    <script type="text/javascript" src="../../modal.js"></script>
+    <script type="text/javascript" src="../../svg-modal.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.2/dist/svg-pan-zoom.min.js"></script>
+    <script type="text/javascript" src="../../toggle-theme.js"></script>
+    <link href="../../admonition.css" rel="stylesheet">
+
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" crossorigin="anonymous">
+        
+            <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" crossorigin="anonymous"></script>
+        
+            <script>
+            window.WebFontConfig = {
+                custom: {
+                families: ['KaTeX_AMS', 'KaTeX_Caligraphic:n4,n7', 'KaTeX_Fraktur:n4,n7',
+                    'KaTeX_Main:n4,n7,i4,i7', 'KaTeX_Math:i4,i7', 'KaTeX_Script',
+                    'KaTeX_SansSerif:n4,n7,i4', 'KaTeX_Size1', 'KaTeX_Size2', 'KaTeX_Size3',
+                    'KaTeX_Size4', 'KaTeX_Typewriter'],
+                },
+            };
+            </script>
+            <script defer src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" crossorigin="anonymous"></script>
+            <link href="../site/custom.css" rel="stylesheet">
+  </head>
+  <body>
+    <script type="text/javascript" src="../../header.js"></script>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand has-site-branding"><a href="../" class="navbar-item"><span class="has-text-weight-semibold has-site-branding">Common Patterns</span></a></div>
+      <div class="navbar-menu has-site-branding">
+        <div class="navbar-end">
+          <div class="navbar-item"><input class="input is-small is-rounded" id="search" type="search" size="30" maxlength="50" placeholder="Search..." onkeyup="redirect(event, value, '../search/')"></div>
+          <div class="navbar-item has-dropdown is-hoverable"><a class="navbar-link has-site-branding">master</a>
+            <div class="navbar-dropdown is-right"><a href="../../master/" class="navbar-item">master</a>
+              <hr class="navbar-divider">
+<a class="navbar-item" onclick="toggleTheme()">Toggle theme</a>
+              <hr class="navbar-divider">
+              <div class="navbar-item has-text-grey-light"><span>v</span><span>0.0.0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="site-layout" id="site">
+      <aside class="menu p-3">
+        <p class="menu-label">General</p>
+        <ul class="menu-list has-site-branding">
+          <li><a href="../" class="">Home</a><a href="../database/" class="">Database</a><a href="./" class="is-active">Cache</a></li>
+        </ul>
+        <p class="menu-label">Software systems</p>
+        <ul class="menu-list has-site-branding">
+          <li></li>
+        </ul>
+      </aside>
+      <div class="container is-fluid">
+        <div class="content p-3">
+          <div><h1 id="cache"><a href="#cache" id="cache">Cache</a></h1>
+<ul>
+ <li><a href="#cache-aside">Cache-Aside</a></li>
+ <li><a href="#cache-through-readwrite-through">Cache-Through (Read/Write-Through)</a></li>
+ <li><a href="#write-around">Write-Around</a></li>
+ <li><a href="#write-behind">Write-Behind</a></li>
+ <li><a href="#eviction">Eviction</a></li>
+ <li><a href="#examples">Examples</a></li>
+ <li><a href="#sources">Sources</a></li>
+</ul>
+<p><a href="https://en.wikipedia.org/wiki/Cache_(computing)" target="blank">Caches</a> store data so that future requests for that data can be served faster. It is typically a smaller, faster storage layer that sits between the application and a larger, slower backing store (e.g., a database or file system).</p>
+<h2 id="cache-aside"><a href="#cache-aside" id="cache-aside">Cache-Aside</a></h2>
+<p>The application is responsible for reading and writing data to the cache as needed. When data is requested, the application first checks the cache. If the data is found (a cache hit), it is returned to the client.</p>
+<h4 id="cache-hit"><a href="#cache-hit" id="cache-hit">Cache Hit</a></h4>
+<p>When the data is found in the cache, it is returned directly to the client.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    Client-&gt;&gt;Server: GET /data
+    Server-&gt;&gt;Cache: Read data
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h4 id="cache-miss"><a href="#cache-miss" id="cache-miss">Cache Miss</a></h4>
+<p>When the data is not found in the cache, it is fetched from the backing store, written to the cache, and then returned to the client.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    Client-&gt;&gt;Server: GET /data
+    Server-&gt;&gt;Cache: Read data
+    Server-&gt;&gt;DB: Read data
+    Server-&gt;&gt;Cache: Write data
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h4 id="write"><a href="#write" id="write">Write</a></h4>
+<p>When data is written, it is written to both the cache and the backing store.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Cache
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    par
+        Server-&gt;&gt;Database: Write data
+    and
+        Server-&gt;&gt;Cache: Write data
+    end
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h2 id="cache-through-readwrite-through"><a href="#cache-through-readwrite-through" id="cache-through-readwrite-through">Cache-Through (Read/Write-Through)</a></h2>
+<p>Instead of the application managing the cache, a caching layer (e.g., Redis, Memcached) is used to automatically handle reading and writing data to the cache as needed.</p>
+<h4 id="cache-hit-1"><a href="#cache-hit-1" id="cache-hit-1">Cache Hit</a></h4>
+<p>When the data is found in the cache, it is returned directly to the client.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    Client-&gt;&gt;Server: GET /data
+    Server-&gt;&gt;Cache: Read data
+    Cache-&gt;&gt;Server: Return data
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h4 id="cache-miss-1"><a href="#cache-miss-1" id="cache-miss-1">Cache Miss</a></h4>
+<p>When the data is not found in the cache, it is fetched from the backing store, written to the cache, and then returned to the client.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Cl as Client
+    participant Se as Server
+    participant Ca as Cache
+    participant DB as Database
+    
+    Cl-&gt;&gt;Se: GET /data
+    Se-&gt;&gt;Ca: Read data
+    Ca-&gt;&gt;DB: Read data
+    DB-&gt;&gt;Ca: Write data
+    Ca-&gt;&gt;Se: Return data
+    Se-&gt;&gt;Cl: 200 OK
+</code></pre>
+<h4 id="write-1"><a href="#write-1" id="write-1">Write</a></h4>
+<p>Data is written to the cache and backing store at the same time. I/O completion is only confirmed once data has been written to both places.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    Client-&gt;&gt;Server: POST /data
+    Server-&gt;&gt;Cache: Write data
+    Cache-&gt;&gt;Database: Write data
+    Server-&gt;&gt;Client: 200 OK
+</code></pre>
+<h2 id="write-around"><a href="#write-around" id="write-around">Write-Around</a></h2>
+<p>Data is written directly to the backing store, bypassing the cache. The cache is only updated when data is read.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    Server-&gt;&gt;Database: Write data
+    Server-&gt;&gt;Client: 200 OK    
+</code></pre>
+<h2 id="write-behind"><a href="#write-behind" id="write-behind">Write-Behind</a></h2>
+<p>Data is written to the cache only. The cache asynchronously writes data to the backing store at a later time.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Client
+    participant Server
+    participant Cache
+    participant Database
+    
+    Client-&gt;&gt;Server: POST /data
+    Server-&gt;&gt;Cache: Write data
+    Server-&gt;&gt;Client: 200 OK
+    Note over Server, Database: Asynchronous write to Database
+    Server--&gt;&gt;Database: Write data
+</code></pre>
+<h2 id="eviction"><a href="#eviction" id="eviction">Eviction</a></h2>
+<p>TTL (Time-To-Live) is a common eviction policy where cached data is automatically removed after a certain period of time. Other eviction policies include LRU (Least Recently Used), LFU (Least Frequently Used), and FIFO (First In, First Out).</p>
+<h2 id="examples"><a href="#examples" id="examples">Examples</a></h2>
+<h4 id="redis-in-memory-data-store"><a href="#redis-in-memory-data-store" id="redis-in-memory-data-store">Redis (In-Memory Data Store)</a></h4>
+<p><a href="https://redis.io/" target="blank">Redis</a> is a versatile in-memory data store that serves as both a cache and a database. It supports complex data structures and provides features like data expiration, which makes it a powerful choice for caching. Redis is often used to cache frequently accessed data, such as user sessions, leaderboard rankings, and real-time analytics.</p>
+<p><a href="https://memcached.org/" target="blank">Memcached</a> is an in-memory key-value store designed for high-performance caching. It is known for its simplicity and efficiency in storing and retrieving data. Developers often use Memcached to cache database query results, API responses, and frequently accessed data in web applications.</p>
+<h2 id="sources"><a href="#sources" id="sources">Sources</a></h2>
+<ul>
+ <li><a href="https://hazelcast.com/blog/a-hitchhikers-guide-to-caching-patterns/" target="blank">A Hitchhiker’s Guide to Caching Patterns by Hazelcast</a></li>
+ <li><a href="https://www.designgurus.io/answers/detail/what-is-read-through-vs-write-through-cache" target="blank">What is Read-Through vs Write-Through Cache? by Design Gurus</a></li>
+ <li><a href="https://levelup.gitconnected.com/mastering-caching-strategies-benefits-and-trade-offs-38c355024bc5" target="blank">Mastering Caching: Strategies, Benefits and Trade-offs by Level Up Coding</a></li>
+</ul></div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="../../admonition.js"></script>
+    <script type="text/javascript" src="../../reformat-mermaid.js"></script>
+    <script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.9.0/dist/mermaid.esm.min.mjs';</script>
+    <script type="text/javascript" src="../../katex-render.js"></script>
+  </body>
+</html>
